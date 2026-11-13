@@ -1,2 +1,3 @@
-# medifix-price-input
-MediFix part selling-price input table (static web app)
+# MediFix 파트 판매가 입력표
+
+정적 HTML 앱입니다. 접속 코드를 입력해야 데이터를 뷼 수 있습니다.

@@ -1,0 +1,175 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>메디픽스 부품 판매가 검토</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;margin:0;background:#f5f6f8;color:#222;font-size:14px}
+header{position:sticky;top:0;background:#1f4e79;color:#fff;padding:8px 12px;z-index:20}
+header h1{font-size:17px;margin:0 0 6px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bar button,.btn{padding:6px 10px;border:0;border-radius:6px;background:#fff;color:#1f4e79;font-weight:700;cursor:pointer;font-size:14px}
+.btn.pri{background:#2e7d32;color:#fff}.btn.sm{padding:5px 8px;font-size:13px}.btn.ghost{background:#eef2f7;color:#1f4e79}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.tabs button{background:#2f6496;color:#dfe9f5;font-weight:600;padding:5px 9px}
+.tabs button.on{background:#fff;color:#1f4e79}
+.seg{display:inline-flex;border-radius:6px;overflow:hidden}
+.seg button{border-radius:0;background:#2f6496;color:#dfe9f5}.seg button.on{background:#fff;color:#1f4e79}
+#q{padding:6px;border-radius:6px;border:0;min-width:150px}
+#login{max-width:320px;margin:80px auto;background:#fff;padding:20px;border-radius:10px;text-align:center}
+#login input{font-size:18px;padding:8px;width:80%;margin:10px 0}
+.wrap{padding:8px;overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;width:100%;background:#fff;border-radius:8px;box-shadow:0 1px 3px #0001}
+th,td{padding:6px;border-bottom:1px solid #e6e8eb;vertical-align:top;text-align:left}
+th{background:#eef2f7;font-size:13px;position:sticky;top:0;white-space:nowrap}
+td.n,th.n{text-align:right}
+.pn{font-weight:700;word-break:break-all}.sub{color:#666;font-size:12px}
+.tier .prop{font-size:11px;color:#777;margin-bottom:2px;white-space:nowrap}
+.tier input{width:110px;padding:6px;font-size:15px;text-align:right;border:1px solid #bbb;border-radius:6px}
+.tier input.chg{border-color:#1565c0;background:#e8f1fd}
+.tier input.below{border-color:#c62828;background:#fdecec;color:#c62828}
+.tier input.inv{border-color:#ef6c00;background:#fff3e0}
+.tier .fin{font-size:11px;color:#2e7d32;font-weight:700}
+.warn{font-size:11px;color:#c62828}
+tr.done td{background:#f1f8f1}
+.st{font-size:12px;margin-top:4px;white-space:nowrap}
+.saving{color:#e67e22}.saved,.ok{color:#2e7d32;font-weight:700}.err{color:#c62828}.dirty{color:#1565c0}
+.hbtn{background:none;border:1px solid #1f4e79;color:#1f4e79;border-radius:5px;padding:3px 6px;font-size:12px;cursor:pointer;margin-top:4px}
+tr.hist td{background:#fafbfc}
+.hgrid{display:flex;gap:16px;flex-wrap:wrap}
+.htab{border-collapse:collapse;box-shadow:none;width:auto;min-width:320px}
+.htab th,.htab td{padding:3px 8px;font-size:13px;position:static}
+.mm{font-size:13px;line-height:1.7}
+.memo{width:100%;padding:5px;margin-top:6px}
+.legend{font-size:12px;color:#555;padding:4px 10px}
+.legend span{display:inline-block;padding:0 5px;border-radius:4px;margin-right:6px}
+@media (max-width:860px){
+ .wrap{padding:6px}
+ #mt,#mt>tbody,#mt>tbody>tr,#mt>tbody>tr>td{display:block;width:100%}
+ #mt>thead{display:none}
+ #mt{background:none;box-shadow:none}
+ #mt>tbody>tr.main{background:#fff;border-radius:10px;margin:8px 0 0;box-shadow:0 1px 3px #0002;padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+ #mt>tbody>tr.main.done{background:#f1f8f1}
+ #mt>tbody>tr.main>td{border:0;padding:2px;background:none!important}
+ #mt td.rk{display:none}.mob{display:inline!important}
+ #mt td.info,#mt td.cost,#mt td.act{grid-column:1/3}
+ #mt td.cost{text-align:left}
+ #mt td.act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+ .tier input{width:100%;font-size:16px}
+ td[data-l]::before{content:attr(data-l);display:block;font-size:12px;font-weight:700;color:#1f4e79}
+ #mt>tbody>tr.hist{background:#fff;border-radius:0 0 10px 10px;margin-top:-4px;padding:4px}
+ #mt>tbody>tr.hist>td{border:0}
+ .htab{min-width:0;width:100%}
+}
+</style></head><body>
+<div id="login"><h3>메디픽스 판매가 검토</h3><div>접속 코드를 입력하세요</div><input id="pc" type="password" inputmode="numeric"><br><button class="btn pri" onclick="login()">들어가기</button><div id="lerr" class="err"></div></div>
+<div id="app" style="display:none">
+<header><h1>부품 판매가 입력표 <span id="prog" style="font-size:13px;font-weight:400"></span></h1>
+<div class="bar">
+ <span class="seg"><button id="f_un" onclick="setF(1)">미확정만</button><button id="f_all" onclick="setF(0)">전체</button></span>
+ <input id="q" placeholder="품번/부품명/모델 검색" oninput="render()">
+ <button class="btn pri" onclick="saveAll()">전체 저장(보이는 부품 확정)</button>
+ <button onclick="exportCsv()">확정가 CSV</button><span id="gst"></span>
+</div>
+<div class="tabs" id="tabs"></div>
+</header>
+<div class="legend">금액 원·부가세 별도 · 입력칸은 제안가로 채워져 있어요. 고칠 칸만 바꾸고 <b>확정</b>을 누르세요.
+ <span style="background:#e8f1fd;color:#1565c0">파랑=제안가에서 수정</span><span style="background:#fdecec;color:#c62828">빨강=원가 미만</span><span style="background:#fff3e0;color:#ef6c00">주황=대학가가 로컬가보다 낮음</span></div>
+<div class="wrap"><table id="mt"><thead><tr><th class="n">순위</th><th>모델 / 부품명 / 파트번호</th><th class="n">원가</th>
+<th>로컬가</th><th>로컬 대리점가</th><th>대학병원가</th><th>대학병원 대리점가</th><th>확정</th></tr></thead><tbody id="tb"></tbody></table></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb=supabase.createClient('https://trsejuxmgibhgokkhzoi.supabase.co','sb_publishable_aT9nGVGQYrHlKSiegOtfaA_r2nntYlW');
+const T=[['local','로컬가'],['local_dealer','로컬 대리점가'],['univ','대학병원가'],['univ_dealer','대학병원 대리점가']];
+let PASS='',rows=[],ONLY=1,BATCH=0,edits={},open={},hist={},stat={};
+const fmt=v=>v==null||v===''?'-':Number(v).toLocaleString('ko-KR');
+const num=s=>{s=String(s??'').replace(/[^0-9]/g,'');return s===''?null:Number(s)};
+const costOf=r=>r.cost!=null&&r.cost>1?r.cost:null;
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function yd(d){return d?d.slice(2,4)+'.'+d.slice(5,7)+'.'+d.slice(8,10):''}
+async function login(){PASS=document.getElementById('pc').value.trim();const {data,error}=await sb.rpc('ppr_list',{p_pass:PASS});
+ if(error){document.getElementById('lerr').textContent='코드가 맞지 않거나 연결 오류입니다';return}
+ localStorage.setItem('ppr_pc',PASS);rows=data;document.getElementById('login').style.display='none';document.getElementById('app').style.display='';
+ const firstOpen=rows.find(r=>!done(r));BATCH=firstOpen?Math.floor((firstOpen.rank-1)/20)+1:1;render()}
+function hasVal(r,k){return r[k+'_proposed']!=null||r[k+'_revised']!=null}
+function done(r){const ks=T.map(([k])=>k).filter(k=>hasVal(r,k)||r[k+'_confirmed']);return ks.length>0&&ks.every(k=>r[k+'_confirmed'])}
+function anyConf(r){return T.some(([k])=>r[k+'_confirmed'])}
+function cur(r,k){const e=edits[r.part_code];if(e&&k in e)return e[k];return r[k+'_confirmed']?r[k+'_final']:(r[k+'_revised']??r[k+'_proposed'])}
+function setF(v){ONLY=v;stat={};render()}
+function setB(b){BATCH=b;stat={};render()}
+function visible(){const q=document.getElementById('q').value.toLowerCase().trim();
+ return rows.filter(r=>(!ONLY||!done(r)||stat[r.part_code])&&(!BATCH||Math.floor((r.rank-1)/20)+1===BATCH)&&(!q||(r.part_code+' '+(r.part_name||'')+' '+(r.model||'')).toLowerCase().includes(q)))}
+function warnFor(r,k){const v=cur(r,k),c=costOf(r),w=[];if(v==null)return w;
+ if(c&&v<c)w.push('below');
+ if(k==='univ'){const l=cur(r,'local');if(l!=null&&v<l)w.push('inv')}
+ if(k==='univ_dealer'){const l=cur(r,'local_dealer');if(l!=null&&v<l)w.push('inv')}
+ return w}
+function render(){
+ const nb=Math.ceil(Math.max(...rows.map(r=>r.rank))/20);
+ document.getElementById('tabs').innerHTML=[...Array(nb)].map((_,i)=>{const b=i+1,rs=rows.filter(r=>Math.floor((r.rank-1)/20)+1===b),d=rs.filter(done).length;
+  return `<button class="${BATCH===b?'on':''}" onclick="setB(${b})">${(b-1)*20+1}–${b*20}위 <small>${d}/${rs.length}</small></button>`}).join('')+`<button class="${BATCH===0?'on':''}" onclick="setB(0)">전체</button>`;
+ document.getElementById('f_un').className=ONLY?'on':'';document.getElementById('f_all').className=ONLY?'':'on';
+ document.getElementById('prog').textContent=`· 확정 ${rows.filter(done).length}/${rows.length}개 부품`;
+ const vs=visible(),tb=document.getElementById('tb');
+ if(!vs.length){tb.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:30px;color:#666">${ONLY?'이 구간은 모두 확정됐어요 👍 (전체 보기로 확인 가능)':'표시할 부품이 없어요'}</td></tr>`;return}
+ tb.innerHTML=vs.map(rowHtml).join('');
+}
+function rowHtml(r){const c=r.part_code,id=cid(c),cs=costOf(r),dn=done(r);
+ const tiers=T.map(([k,n])=>{const v=cur(r,k),w=warnFor(r,k),chg=v!=null&&v!==r[k+'_proposed'];
+  const cls=[w.includes('below')?'below':'',w.includes('inv')?'inv':'',chg&&!w.length?'chg':''].join(' ');
+  const wt=(w.includes('below')?'원가 미만 ':'')+(w.includes('inv')?(k==='univ'?'로컬가보다 낮음':'로컬대리점가보다 낮음'):'');
+  return `<td class="tier" data-l="${n}"><div class="prop">제안 ${fmt(r[k+'_proposed'])}</div>
+  <input inputmode="numeric" value="${v==null?'':fmt(v)}" placeholder="입력" data-c="${esc(c)}" data-k="${k}" oninput="onIn(this)">
+  ${r[k+'_confirmed']?`<div class="fin">✔ ${fmt(r[k+'_final'])}</div>`:''}<div class="warn">${wt}</div></td>`}).join('');
+ const s=stat[c],dirty=edits[c]&&Object.keys(edits[c]).length;
+ const st=s?`<div class="st ${s[0]}">${s[1]}</div>`:dirty?`<div class="st dirty">수정됨 · 저장 전</div>`:dn?`<div class="st ok">확정됨 ✓</div>`:anyConf(r)?`<div class="st dirty">일부 확정</div>`:`<div class="st sub">미확정</div>`;
+ return `<tr class="main ${dn?'done':''}" id="r_${id}"><td class="n rk">${r.rank}</td>
+ <td class="info"><div class="sub"><b class="mob" style="display:none;color:#1f4e79">${r.rank}위 · </b>${esc(r.model||'')}</div><div>${esc(r.part_name||'')}</div><div class="pn">${esc(c)}</div>
+ <button class="hbtn" onclick="toggleH('${esc(c)}')">${open[c]?'▲ 납품내역 닫기':'▼ 납품내역'}</button></td>
+ <td class="n cost" data-l="원가">${cs?fmt(cs):'<span class="warn">원가 없음</span>'}</td>${tiers}
+ <td class="act"><button class="btn pri sm" onclick="saveRow('${esc(c)}')">${dn?'다시 확정':'확정'}</button>
+ ${anyConf(r)?`<button class="btn ghost sm" onclick="unconf('${esc(c)}')">확정 취소</button>`:''}${st}</td></tr>
+ ${open[c]?`<tr class="hist"><td colspan="8">${histHtml(r)}</td></tr>`:''}`}
+function cid(c){return c.replace(/[^A-Za-z0-9]/g,'_')}
+function onIn(el){const r=rows.find(x=>x.part_code===el.dataset.c),k=el.dataset.k,v=num(el.value);
+ (edits[r.part_code]=edits[r.part_code]||{})[k]=v;delete stat[r.part_code];
+ const pos=el.value.length-el.selectionStart;el.value=v==null?'':fmt(v);const p=Math.max(0,el.value.length-pos);el.setSelectionRange(p,p);
+ // refresh warnings in this row only
+ const tr=el.closest('tr');T.forEach(([kk])=>{const inp=tr.querySelector(`input[data-k="${kk}"]`);const w=warnFor(r,kk),vv=cur(r,kk),chg=vv!=null&&vv!==r[kk+'_proposed'];
+  inp.className=[w.includes('below')?'below':'',w.includes('inv')?'inv':'',chg&&!w.length?'chg':''].join(' ');
+  inp.parentElement.querySelector('.warn').textContent=(w.includes('below')?'원가 미만 ':'')+(w.includes('inv')?(kk==='univ'?'로컬가보다 낮음':'로컬대리점가보다 낮음'):'')});
+ const s=tr.querySelector('.st');if(s){s.className='st dirty';s.textContent='수정됨 · 저장 전'}}
+async function saveRow(c,quiet){const r=rows.find(x=>x.part_code===c);
+ const v=Object.fromEntries(T.map(([k])=>[k,cur(r,k)]));
+ stat[c]=['saving','저장 중…'];if(!quiet)render();
+ const {data,error}=await sb.rpc('ppr_save_row',{p_pass:PASS,p_code:c,p_local:v.local,p_local_dealer:v.local_dealer,p_univ:v.univ,p_univ_dealer:v.univ_dealer});
+ if(error){stat[c]=['err','저장 실패: '+error.message];if(!quiet)render();return false}
+ Object.assign(r,data);delete edits[c];stat[c]=['saved','확정 저장됨 ✓'];if(!quiet)render();return true}
+async function unconf(c){if(!confirm(c+' 확정을 취소할까요? (입력한 가격은 남아 있어요)'))return;const r=rows.find(x=>x.part_code===c);
+ const {data,error}=await sb.rpc('ppr_unconfirm_row',{p_pass:PASS,p_code:c});if(error){alert('실패: '+error.message);return}
+ Object.assign(r,data);stat[c]=['dirty','확정 취소됨'];render()}
+async function saveAll(){const vs=visible();if(!vs.length)return;
+ if(!confirm(`지금 보이는 ${vs.length}개 부품을 입력된 가격으로 모두 확정할까요?`))return;
+ const g=document.getElementById('gst');let ok=0,bad=0;
+ for(const r of vs){g.textContent=`저장 중 ${ok+bad+1}/${vs.length}`;(await saveRow(r.part_code,true))?ok++:bad++}
+ g.textContent=bad?`${ok}개 저장, ${bad}개 실패`:`${ok}개 확정 저장 ✓`;render()}
+async function toggleH(c){open[c]=!open[c];render();if(open[c]&&!hist[c]){
+ const {data,error}=await sb.rpc('ppr_history',{p_pass:PASS,p_code:c});hist[c]=error?{err:error.message}:data;render()}}
+function histHtml(r){const h=hist[r.part_code];
+ const memo=`<div class="mm">${r.basis?'제안 근거: '+esc(r.basis):''}${r.remark?'<br>비고: '+esc(r.remark):''}</div>
+ <input class="memo" placeholder="메모 (자동 저장)" value="${esc(r.note||'')}" onblur="saveNote('${esc(r.part_code)}',this.value)">`;
+ if(!h)return '불러오는 중…'+memo; if(h.err)return '<span class="err">불러오기 실패: '+esc(h.err)+'</span>'+memo;
+ const mx=h.max,mn=h.min;
+ return `<div class="hgrid"><div><table class="htab"><thead><tr><th>납품처</th><th class="n">건수</th><th>최근일</th><th class="n">최근단가</th></tr></thead><tbody>
+ ${h.customers.map(x=>`<tr><td>${esc(x.name)}</td><td class="n">${x.cnt}</td><td>${yd(x.last_date)}</td><td class="n">${fmt(x.last_price)}</td></tr>`).join('')||'<tr><td colspan="4">납품 기록 없음</td></tr>'}
+ </tbody></table><div class="sub">최근 납품일 순 상위 ${h.customers.length}곳 / 전체 ${h.customers_total}곳 · 판매 ${h.total}건 · 단가 VAT 제외 · 반품 제외</div></div>
+ <div class="mm">${mx?`<b>최고가</b> ${fmt(mx.price)} — ${esc(mx.customer)} (${yd(mx.date)})<br><b>최저가</b> ${fmt(mn.price)} — ${esc(mn.customer)} (${yd(mn.date)})<br><span class="sub">전체 기간 기준</span>`:''}
+ <br>원가: ${costOf(r)?fmt(costOf(r))+'원':'원가 없음'}</div></div>${memo}`}
+async function saveNote(c,v){const r=rows.find(x=>x.part_code===c);if((r.note||'')===v.trim())return;
+ const {data,error}=await sb.rpc('ppr_update',{p_pass:PASS,p_code:c,p_field:'note',p_value:v.trim()});if(error){alert('메모 저장 실패');return}Object.assign(r,data)}
+function exportCsv(){const h=['순위','파트번호','모델명','파트명','원가',...T.map(([,n])=>n+' 확정가'),'메모'];
+ const lines=[h,...rows.map(r=>[r.rank,r.part_code,r.model,r.part_name,costOf(r),...T.map(([k])=>r[k+'_final']),r.note])].map(a=>a.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(','));
+ const b=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='medifix-final-prices.csv';a.click()}
+window.addEventListener('beforeunload',e=>{if(Object.keys(edits).some(c=>Object.keys(edits[c]).length)){e.preventDefault();e.returnValue=''}});
+const saved=localStorage.getItem('ppr_pc');if(saved){document.getElementById('pc').value=saved;login()}
+document.getElementById('pc').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+</script></body></html>
